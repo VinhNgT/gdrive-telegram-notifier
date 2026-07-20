@@ -59,9 +59,10 @@ def call(Map config) {
     def notifyFlag   = doNotify ? '--notify' : '--no-notify'
     def filesArg     = config.files ? "--files '${config.files}'" : ''
 
-    docker.image('python:3.12-slim').inside('-u 0:0') {
-        // Install the Python package + dependencies from the GitHub tarball
-        sh "pip install --no-cache-dir -q '${repoUrl}/archive/${repoBranch}.tar.gz'"
+    docker.image('python:3.12-slim').inside('-u 0:0 -v /var/jenkins_home/agent/caches/pip:/root/.cache/pip') {
+        // Install the Python package + dependencies from the GitHub tarball.
+        // The pip cache is mounted from the agent so downloads are reused across builds.
+        sh "pip install -q '${repoUrl}/archive/${repoBranch}.tar.gz'"
 
         // Build the credentials bindings list based on flags
         def credBindings = []
