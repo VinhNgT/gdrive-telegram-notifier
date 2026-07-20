@@ -86,31 +86,41 @@ uv run upload-and-notify --help  # Run the CLI
 2. Search for **"Google Drive API"**
 3. Click it → click **Enable**
 
-### Step 3: Create a Service Account
+### Step 3: Create OAuth2 Credentials
 
 1. Go to **APIs & Services** → **Credentials**
-2. Click **+ Create Credentials** → **Service Account**
-3. Name: `jenkins-drive-uploader`
-4. Click **Create and Continue**
-5. Skip the optional role/access steps → click **Done**
-6. Click on the newly created service account email
-7. Go to the **Keys** tab → **Add Key** → **Create new key** → **JSON**
-8. A `.json` file downloads — **this is your service account key**. Keep it safe.
+2. Click **+ Create Credentials** → **OAuth client ID**
+3. If prompted, configure the **OAuth consent screen** first:
+   - User type: **External** → click **Create**
+   - Fill in app name (e.g. `Jenkins CI Uploads`) and your email
+   - Skip scopes → click **Save and Continue** through all steps
+   - Add your Google account as a **Test user** (since the app will be in "Testing" status)
+4. Back in Credentials, click **+ Create Credentials** → **OAuth client ID**:
+   - Application type: **Desktop app**
+   - Name: `jenkins-drive-uploader`
+   - Click **Create**
+5. Click **Download JSON** — save the file (e.g. `client_secret.json`)
 
-### Step 4: Set Up the Google Drive Folder
+### Step 4: Authorize and Generate Credentials
+
+1. On your local machine, clone this repo and run the authorization flow:
+   ```bash
+   uv sync
+   uv run gdrive-auth --client-secrets /path/to/client_secret.json
+   ```
+2. A browser window opens — sign in with your Google account and grant Drive access
+3. A `gdrive-credentials.json` file is created — **this is your credential file for Jenkins**
+
+### Step 5: Set Up the Google Drive Folder
 
 1. In Google Drive, create a folder: `Tendoo Mall Builds`
-2. Right-click → **Share**
-3. Paste the service account email (e.g. `jenkins-drive-uploader@jenkins-ci-uploads.iam.gserviceaccount.com`) — you'll find this on the service account details page
-4. Set permission to **Editor**
-5. Click **Send**
-6. Open the folder — the folder ID is the last part of the URL:
+2. Open the folder — the folder ID is the last part of the URL:
    ```
    https://drive.google.com/drive/folders/XXXXXXXXXXXXXXXXXXXXXXXXX
                                           ↑ this is the folder ID
    ```
 
-### Step 5: Create a Telegram Bot
+### Step 6: Create a Telegram Bot
 
 1. Open Telegram, search for **@BotFather**
 2. Send `/newbot`
@@ -124,23 +134,23 @@ uv run upload-and-notify --help  # Run the CLI
    ```
 8. Find the `"chat"` object → copy the `"id"` value (it's negative for groups, like `-1001234567890`). **This is your chat ID.**
 
-### Step 6: Store Credentials in Jenkins
+### Step 7: Store Credentials in Jenkins
 
 1. Go to **Jenkins** → **Manage Jenkins** → **Credentials** → **(global)** → **Add Credentials**
 
-2. **Google Drive Service Account Key:**
+2. **Google Drive OAuth2 Credentials:**
    - Kind: **Secret file**
-   - File: Upload the `.json` key from Step 3
-   - ID: `gdrive-service-account-key`
-   - Description: `Google Drive Service Account Key`
+   - File: Upload the `gdrive-credentials.json` from Step 4
+   - ID: `gdrive-oauth-credentials`
+   - Description: `Google Drive OAuth2 Credentials`
 
 3. **Telegram Bot Token:**
    - Kind: **Secret text**
-   - Secret: Paste the bot token from Step 5
+   - Secret: Paste the bot token from Step 6
    - ID: `telegram-bot-token`
    - Description: `Telegram Bot Token`
 
-### Step 7: Register the Shared Library in Jenkins
+### Step 8: Register the Shared Library in Jenkins
 
 1. Go to **Jenkins** → **Manage Jenkins** → **System** (or **Configure System**)
 2. Scroll to **Global Pipeline Libraries**
@@ -153,7 +163,7 @@ uv run upload-and-notify --help  # Run the CLI
    - **Credentials:** (add if the repo is private)
 4. Click **Save**
 
-### Step 8: Update the Pipeline
+### Step 9: Update the Pipeline
 
 Add three things to your existing Jenkins pipeline script:
 
@@ -175,8 +185,8 @@ Add three things to your existing Jenkins pipeline script:
      agent { label 'build' }
  
 +    environment {
-+        GDRIVE_FOLDER_ID    = '<your-folder-id>'  // from Step 4
-+        TELEGRAM_CHAT_ID    = '<your-chat-id>'    // from Step 5
++        GDRIVE_FOLDER_ID    = '<your-folder-id>'  // from Step 5
++        TELEGRAM_CHAT_ID    = '<your-chat-id>'    // from Step 6
 +        MAX_BUILDS_TO_KEEP  = '10'                // single source of truth
 +    }
 +
@@ -197,7 +207,7 @@ Add three things to your existing Jenkins pipeline script:
 +
 +            uploadAndNotify(
 +                files:                  'tendoo_mall/build/app/outputs/flutter-apk/tendoo-mall-*.apk',
-+                gdriveCredentialsId:    'gdrive-service-account-key',
++                gdriveCredentialsId:    'gdrive-oauth-credentials',
 +                gdriveFolderId:         env.GDRIVE_FOLDER_ID,
 +                telegramCredentialsId:  'telegram-bot-token',
 +                telegramChatId:         env.TELEGRAM_CHAT_ID,
@@ -210,4 +220,4 @@ Add three things to your existing Jenkins pipeline script:
      }
 ```
 
-Replace `<your-folder-id>` with the folder ID from Step 4 and `<your-chat-id>` with the chat ID from Step 5.
+Replace `<your-folder-id>` with the folder ID from Step 5 and `<your-chat-id>` with the chat ID from Step 6.

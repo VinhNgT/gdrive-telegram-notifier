@@ -66,7 +66,7 @@ def call(Map config) {
         // Build the credentials bindings list based on flags
         def credBindings = []
         if (doUpload) {
-            credBindings << file(credentialsId: config.gdriveCredentialsId, variable: 'GDRIVE_SA_KEY')
+            credBindings << file(credentialsId: config.gdriveCredentialsId, variable: 'GDRIVE_CREDENTIALS')
         }
         if (doNotify) {
             credBindings << string(credentialsId: config.telegramCredentialsId, variable: 'TELEGRAM_TOKEN')
@@ -75,7 +75,7 @@ def call(Map config) {
         withCredentials(credBindings) {
             // Build the CLI command dynamically
             def gdriveArgs = doUpload ? """\\
-                    --gdrive-key "\$GDRIVE_SA_KEY" \\
+                    --gdrive-credentials "\$GDRIVE_CREDENTIALS" \\
                     --gdrive-folder-id '${config.gdriveFolderId}'""" : ''
             def telegramArgs = doNotify ? """\\
                     --telegram-token "\$TELEGRAM_TOKEN" \\

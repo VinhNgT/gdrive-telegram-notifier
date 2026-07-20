@@ -36,7 +36,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--files", help="Glob pattern for artifact files (required when --upload)")
 
     # Google Drive (required when --upload)
-    parser.add_argument("--gdrive-key", help="Path to service account JSON key file")
+    parser.add_argument("--gdrive-credentials", help="Path to OAuth2 credentials JSON file (from gdrive-auth)")
     parser.add_argument("--gdrive-folder-id", help="Root Google Drive folder ID")
 
     # Telegram (required when --notify)
@@ -65,8 +65,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         missing = []
         if not args.files:
             missing.append("--files")
-        if not args.gdrive_key:
-            missing.append("--gdrive-key")
+        if not args.gdrive_credentials:
+            missing.append("--gdrive-credentials")
         if not args.gdrive_folder_id:
             missing.append("--gdrive-folder-id")
         if missing:
@@ -109,7 +109,7 @@ def main(argv: list[str] | None = None) -> None:
     uploaded_files: list[dict[str, str]] = []
 
     if args.upload:
-        service = authenticate(args.gdrive_key)
+        service = authenticate(args.gdrive_credentials)
 
         folder_name = f"Build #{args.build_number} · {args.build_env}"
         folder_id, folder_link = create_build_folder(
