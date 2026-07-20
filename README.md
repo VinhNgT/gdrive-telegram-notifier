@@ -37,7 +37,9 @@ pipeline {
                 buildEnv:               params.BUILD_ENV,
                 branch:                 params.BRANCH,
                 commit:                 'abc1234',
-                maxBuilds:              10,  // optional – sync with logRotator
+                maxBuilds:              10,    // optional – sync with logRotator
+                upload:                 true,  // optional (default: true)
+                notify:                 true,  // optional (default: true)
             )
         }
     }
@@ -46,17 +48,19 @@ pipeline {
 
 ## Parameters
 
-| Parameter              | Required | Description                                                |
-|------------------------|----------|------------------------------------------------------------|
-| `files`                | ✅       | Glob pattern for artifact files                             |
-| `gdriveCredentialsId`  | ✅       | Jenkins credentials ID for the GDrive service account key   |
-| `gdriveFolderId`       | ✅       | Google Drive folder ID (root folder for uploads)            |
-| `telegramCredentialsId`| ✅       | Jenkins credentials ID for the Telegram bot token           |
-| `telegramChatId`       | ✅       | Telegram chat ID (negative for groups)                      |
-| `buildEnv`             | ✅       | Build environment (dev/qa/stg/preprod/prod)                 |
-| `branch`               | ✅       | Git branch name                                             |
-| `commit`               | ✅       | Git commit hash (short)                                     |
-| `maxBuilds`            | ❌       | Max build folders to keep on Drive; oldest are deleted      |
+| Parameter              | Required           | Description                                              |
+|------------------------|--------------------|----------------------------------------------------------|
+| `upload`               | ❌ (default: `true`) | Upload artifacts to Google Drive                        |
+| `notify`               | ❌ (default: `true`) | Send Telegram notification                              |
+| `files`                | when `upload`      | Glob pattern for artifact files                           |
+| `gdriveCredentialsId`  | when `upload`      | Jenkins credentials ID for the GDrive service account key |
+| `gdriveFolderId`       | when `upload`      | Google Drive folder ID (root folder for uploads)          |
+| `telegramCredentialsId`| when `notify`      | Jenkins credentials ID for the Telegram bot token         |
+| `telegramChatId`       | when `notify`      | Telegram chat ID (negative for groups)                    |
+| `buildEnv`             | ✅                 | Build environment (dev/qa/stg/preprod/prod)               |
+| `branch`               | ✅                 | Git branch name                                           |
+| `commit`               | ✅                 | Git commit hash (short)                                   |
+| `maxBuilds`            | ❌                 | Max build folders to keep on Drive; oldest are deleted    |
 
 ## Local Development
 

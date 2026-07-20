@@ -41,8 +41,8 @@ def _build_message(
     build_url: str,
     branch: str,
     commit: str,
-    folder_link: str,
-    uploaded_files: list[dict[str, str]],
+    folder_link: str | None = None,
+    uploaded_files: list[dict[str, str]] | None = None,
 ) -> str:
     """Build a MarkdownV2-formatted Telegram message."""
     env = _escape_md(build_env)
@@ -50,7 +50,6 @@ def _build_message(
     br = _escape_md(branch)
     cmt = _escape_md(commit)
     build_url_esc = _escape_md(build_url)
-    folder_link_esc = _escape_md(folder_link)
 
     lines = [
         f"✅ *Tendoo Mall — Build \\#{num}*",
@@ -58,17 +57,21 @@ def _build_message(
         f"📋 *Environment:* {env}",
         f"🌿 *Branch:* {br}",
         f"🔖 *Commit:* `{cmt}`",
-        "",
-        "📦 *Downloads:*",
     ]
 
-    for f in uploaded_files:
-        arch = _escape_md(_format_filename(f["path"]))
-        link = _escape_md(f["link"])
-        lines.append(f"  • {arch} — [Download]({link})")
+    if uploaded_files:
+        lines.append("")
+        lines.append("📦 *Downloads:*")
+        for f in uploaded_files:
+            arch = _escape_md(_format_filename(f["path"]))
+            link = _escape_md(f["link"])
+            lines.append(f"  • {arch} — [Download]({link})")
+
+    if folder_link:
+        folder_link_esc = _escape_md(folder_link)
+        lines.append(f"📁 Folder — [Open]({folder_link_esc})")
 
     lines.extend([
-        f"📁 Folder — [Open]({folder_link_esc})",
         "",
         f"🔗 Jenkins — [Build Page]({build_url_esc})",
     ])
@@ -85,8 +88,8 @@ def send_notification(
     build_url: str,
     branch: str,
     commit: str,
-    folder_link: str,
-    uploaded_files: list[dict[str, str]],
+    folder_link: str | None = None,
+    uploaded_files: list[dict[str, str]] | None = None,
 ) -> None:
     """Send a formatted build notification to a Telegram group chat."""
     text = _build_message(
