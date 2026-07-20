@@ -1,0 +1,18 @@
+[project]
+name = "gdrive-telegram-notifier"
+version = "1.0.0"
+description = "Upload build artifacts to Google Drive and notify via Telegram"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "google-api-python-client>=2.173.0",
+    "google-auth>=2.40.3",
+    "requests>=2.32.4",
+]
+
+[project.scripts]
+upload-and-notify = "gdrive_telegram_notifier.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
