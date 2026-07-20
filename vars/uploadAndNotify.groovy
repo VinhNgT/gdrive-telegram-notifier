@@ -49,8 +49,9 @@ def call(Map config) {
 
     // The shared library is checked out on the Jenkins controller, not the
     // agent.  To get the Python package onto the agent we pip-install
-    // directly from the git repo URL (pip supports git+ URLs natively).
-    def repoUrl = config.repoUrl ?: 'https://github.com/VinhNgT/gdrive-telegram-notifier.git'
+    // directly from the GitHub tarball URL (no git binary needed).
+    def repoUrl = config.repoUrl ?: 'https://github.com/VinhNgT/gdrive-telegram-notifier'
+    def repoBranch = config.repoBranch ?: 'main'
 
     // Build optional CLI flags
     def maxBuildsArg = config.maxBuilds ? "--max-builds ${config.maxBuilds}" : ''
@@ -59,8 +60,8 @@ def call(Map config) {
     def filesArg     = config.files ? "--files '${config.files}'" : ''
 
     docker.image('python:3.12-slim').inside('-u 0:0') {
-        // Install the Python package + dependencies directly from git
-        sh "pip install --no-cache-dir -q 'gdrive-telegram-notifier @ git+${repoUrl}'"
+        // Install the Python package + dependencies from the GitHub tarball
+        sh "pip install --no-cache-dir -q '${repoUrl}/archive/${repoBranch}.tar.gz'"
 
         // Build the credentials bindings list based on flags
         def credBindings = []
