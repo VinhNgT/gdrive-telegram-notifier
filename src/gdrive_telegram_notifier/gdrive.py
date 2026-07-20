@@ -44,7 +44,7 @@ def create_build_folder(
     }
     folder = (
         service.files()
-        .create(body=metadata, fields="id, webViewLink")
+        .create(body=metadata, fields="id, webViewLink", supportsAllDrives=True)
         .execute()
     )
     return folder["id"], folder["webViewLink"]
@@ -69,7 +69,8 @@ def upload_file(
     )
 
     request = service.files().create(
-        body=metadata, media_body=media, fields="id, webViewLink"
+        body=metadata, media_body=media, fields="id, webViewLink",
+        supportsAllDrives=True,
     )
 
     # Resumable upload loop — prints progress for large files.
@@ -94,6 +95,7 @@ def set_anyone_can_view(service: Resource, file_id: str) -> None:
         fileId=file_id,
         body={"type": "anyone", "role": "reader"},
         fields="id",
+        supportsAllDrives=True,
     ).execute()
 
 
@@ -120,7 +122,10 @@ def cleanup_old_builds(
     )
     results = (
         service.files()
-        .list(q=query, fields="files(id, name)", pageSize=1000)
+        .list(
+            q=query, fields="files(id, name)", pageSize=1000,
+            supportsAllDrives=True, includeItemsFromAllDrives=True,
+        )
         .execute()
     )
     folders = results.get("files", [])
@@ -139,7 +144,7 @@ def cleanup_old_builds(
     # Delete folders beyond the limit.
     to_delete = build_folders[max_builds:]
     for build_num, folder_id, folder_name in to_delete:
-        service.files().delete(fileId=folder_id).execute()
+        service.files().delete(fileId=folder_id, supportsAllDrives=True).execute()
         print(f"  Deleted old build folder: {folder_name}")
 
     if to_delete:
