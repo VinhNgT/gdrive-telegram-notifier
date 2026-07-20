@@ -63,9 +63,9 @@ def _build_message(
         lines.append("")
         lines.append("📦 *Downloads:*")
         for f in uploaded_files:
-            arch = _escape_md(_format_filename(f["path"]))
-            link = _escape_md(f["link"])
-            lines.append(f"  • {arch} — [Download]({link})")
+            filename = _escape_md(Path(f["path"]).name)
+            download_url = _escape_md(f"https://drive.google.com/uc?export=download&id={f['id']}")
+            lines.append(f"  • [{filename}]({download_url})")
 
     if folder_link:
         folder_link_esc = _escape_md(folder_link)
